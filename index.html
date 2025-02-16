@@ -1,0 +1,299 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dinosaurio Chrome</title>
+
+    <style>
+        * {
+            padding: 0;
+            margin: 0;
+        }
+
+        body {
+            height: 100vh;
+            background: #584040;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .contenedor {
+            width: 100%;
+            max-width: 920px;
+            height: 280px;
+            margin: 0 auto;
+            position: relative;
+            background: linear-gradient(to bottom, #87CEEB, #B7D6C7, #FFE2D1);
+            overflow: hidden;
+        }
+
+        .dino {
+            width: 84px;
+            height: 84px;
+            position: absolute;
+            bottom: 22px;
+            left: 42px;
+            z-index: 2;
+            background: url(dino.png) repeat-x 0px 0px;
+            background-size: 336px 84px;
+            background-position: 0px;
+            animation: animarDino 0.25s steps(2) infinite;
+        }
+
+        .dino-corriendo {
+            animation: animarDino 0.25s steps(2) infinite;
+        }
+
+        .dino-estallando {
+            background-position-x: -252px;
+        }
+
+        .suelo {
+            width: 100%;
+            height: 42px;
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            background: url(suelo.png) repeat-x 0px 0px;
+            background-size: cover;
+            animation: moverSueloReves 1.25s linear infinite;
+        }
+
+        .cactus {
+            width: 50px;
+            height: 100px;
+            position: absolute;
+            bottom: 22px;
+            animation: moverCactus 3s linear infinite;
+        }
+
+        .cactus1 {
+            background: url(cactus1.png) no-repeat;
+            background-size: contain;
+        }
+
+        .nube {
+            width: 100px;
+            height: 50px;
+            position: absolute;
+            top: 20px;
+            animation: moverNube 20s linear infinite;
+        }
+
+        .nube1 {
+            background: url(nube.png) no-repeat;
+            background-size: contain;
+        }
+
+        .nube2 {
+            background: url(nube.png) no-repeat;
+            background-size: contain;
+        }
+
+        .nube3 {
+            background: url(nube.png) no-repeat;
+            background-size: contain;
+        }
+
+        .nube4 {
+            background: url(nube.png) no-repeat;
+            background-size: contain;
+        }
+
+        .score {
+            width: 100px;
+            height: 30px;
+            position: absolute;
+            top: 5px;
+            right: 15px;
+            z-index: 10;
+            color: #D48872;
+            font-family: Verdana;
+            font-size: 30px;
+        }
+
+        .game-over {
+            display: none;
+            position: absolute;
+            top: 30%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            color: red;
+            font-size: 40px;
+            font-family: Verdana;
+            z-index: 20;
+        }
+
+        .restart {
+            display: none;
+            position: absolute;
+            top: 70%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            padding: 10px 20px;
+            font-size: 20px;
+            font-family: Verdana;
+            z-index: 20;
+        }
+
+        @keyframes animarDino {
+            from {
+                background-position-x: -84px;
+            }
+            to {
+                background-position-x: -252px;
+            }
+        }
+
+        @keyframes moverSueloReves {
+            from {
+                background-position-x: 0;
+            }
+            to {
+                background-position-x: 100%;
+            }
+        }
+
+        @keyframes moverCactus {
+            from {
+                left: 100%;
+            }
+            to {
+                left: -50px;
+            }
+        }
+
+        @keyframes moverNube {
+            from {
+                transform: translateX(0);
+            }
+            to {
+                transform: translateX(-100%);
+            }
+        }
+
+        @keyframes saltar {
+            0% { bottom: 22px; left: 42px; }
+            50% { bottom: 220px; left: 42px; }
+            100% { bottom: 22px; left: 42px; }
+        }
+
+        .saltar {
+            animation: saltar 1s ease;
+        }
+    </style>
+</head>
+<body>
+    <div class="contenedor">
+        <div class="suelo"></div>
+        <div class="dino dino-corriendo"></div>
+        <div class="cactus cactus1"></div>
+        <div class="nube nube1"></div>
+        <div class="nube nube2"></div>
+        <div class="nube nube3"></div>
+        <div class="nube nube4"></div>
+        <div class="score"></div>
+        <div class="game-over">Game Over</div>
+        <button class="restart">Reiniciar</button>
+    </div>
+
+    <script>
+        let score = 0;
+        let gameSpeed = 5;
+        const dino = document.querySelector('.dino');
+        const cactus1 = document.querySelector('.cactus1');
+        const gameOver = document.querySelector('.game-over');
+        const restartButton = document.querySelector('.restart');
+        let isJumping = false;
+        let isGameOver = false;
+        let isDodged = false;
+
+        function updateScore() {
+            if (!isGameOver) {
+                document.querySelector('.score').textContent = score;
+                score++;
+                if (score % 200 === 0) {
+                    gameSpeed += 1;
+                    document.querySelectorAll('.cactus').forEach(cactus => {
+                        cactus.style.animationDuration = `${3 / gameSpeed}s`;
+                    });
+                }
+            }
+        }
+
+        function jump() {
+            if (!isJumping && !isGameOver) {
+                isJumping = true;
+                dino.classList.add('saltar');
+                setTimeout(() => {
+                    dino.classList.remove('saltar');
+                    isJumping = false;
+                    isDodged = true;
+                    setTimeout(() => {
+                        isDodged = false;
+                    }, 500);
+                }, 1000);
+            }
+        }
+
+        function moveCactus() {
+            if (!isGameOver) {
+                let cactus1Pos = Math.random() * 100;
+                cactus1.style.left = `${cactus1Pos}%`;
+                setTimeout(moveCactus, 3000);
+            }
+        }
+
+        function checkCollision() {
+            const dinoRect = dino.getBoundingClientRect();
+            const cactusRect = cactus1.getBoundingClientRect();
+
+            if (
+                dinoRect.left < cactusRect.left + cactusRect.width &&
+                dinoRect.left + dinoRect.width > cactusRect.left &&
+                dinoRect.top < cactusRect.top + cactusRect.height &&
+                dinoRect.top + dinoRect.height > cactusRect.top &&
+                !isDodged
+            ) {
+                isGameOver = true;
+                dino.style.animationPlayState = 'paused';
+                document.querySelector('.suelo').style.animationPlayState = 'paused';
+                cactus1.style.animationPlayState = 'paused';
+                gameOver.style.display = 'block';
+                restartButton.style.display = 'block';
+                clearInterval(scoreInterval);
+                clearInterval(cactusInterval);
+            }
+        }
+
+        function restartGame() {
+            score = 0;
+            gameSpeed = 5;
+            isGameOver = false;
+            gameOver.style.display = 'none';
+            restartButton.style.display = 'none';
+            dino.style.animationPlayState = 'running';
+            document.querySelector('.suelo').style.animationPlayState = 'running';
+            cactus1.style.animationPlayState = 'running';
+            document.querySelector('.score').textContent = score;
+            moveCactus();
+            scoreInterval = setInterval(updateScore, 100);
+            cactusInterval = setInterval(checkCollision, 100);
+        }
+
+        document.addEventListener('keydown', function(event) {
+            if (event.code === 'Space') {
+                jump();
+            }
+        });
+
+        restartButton.addEventListener('click', restartGame);
+
+        let scoreInterval = setInterval(updateScore, 100);
+        let cactusInterval = setInterval(checkCollision, 100);
+        moveCactus();
+    </script>
+</body>
+</html>
